@@ -74,7 +74,7 @@ function renderApps() {
  clear(el('dock'));clear(el('apps'));
  for(var i=0;i<dock.length;i++)tile(dock[i],i,'dock',el('dock'));
  for(i=0;i<remainder.length;i++)tile(remainder[i],i,'apps',el('apps'));
- text('app-count',String(apps.length)+' instalados');
+ text('app-count',apps.length && apps[0].unverified ? String(apps.length)+' atalhos sugeridos · não verificados' : String(apps.length)+' instalados');
  if(!apps.length){
  var empty=node('div','',el('dock'));empty.style.cssText='padding:50px;color:#a8a8a8;font-size:22px';
  empty.textContent='A LG não permitiu listar os aplicativos. Verifique as permissões do webOS.';
@@ -190,7 +190,18 @@ function swapDock(a,b){
 }
 function refreshApps(){
  TV.apps(function(list){
-  if(!list||!list.length){toast('Lista de apps vazia ou bloqueada pelo firmware LG.');}
+  if((!list||!list.length) && TV.name==='webos'){
+   // Some LG firmwares deny listLaunchPoints to Developer Mode apps (#93 upstream).
+   // Launch by known ID can still succeed; these are explicitly UNVERIFIED shortcuts.
+   var defaults=[
+    ['netflix','Netflix'],['youtube.leanback.v4','YouTube'],
+    ['amazon','Prime Video'],['globoplaywebos','Globoplay'],
+    ['com.disney.disneyplus-prod','Disney+'],['com.hbo.hbomax','Max'],
+    ['spotify-beehive','Spotify'],['com.webos.app.browser','Navegador']
+   ];
+   list=defaults.map(function(a){return {id:a[0],title:a[1],icon:'',color:'#15F5BA',unverified:true};});
+   toast('LG bloqueou a listagem. Exibindo atalhos sugeridos, não verificados.');
+  }
   sortApps(list||[]);
   booted=true;
  });
