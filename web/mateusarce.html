@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>Mateus Arce · TV Launcher</title>
+<link rel="stylesheet" href="mateusarce.css">
+</head>
+<body>
+<div id="stage">
+  <div class="back-grid"></div><div class="back-dots"></div><div class="scanlines"></div><div id="ambient"></div>
+  <header>
+    <div class="identity">
+      <div class="greeting"><span class="mint">~/</span> <span id="greeting">BEM-VINDO</span></div>
+      <div class="clockrow"><span id="clock">--:--</span><span class="clock-divider"></span>
+        <div class="clock-meta"><span id="date">Carregando...</span><span class="subtitle" id="status">LG webOS · MateusArce</span></div>
+      </div>
+    </div>
+    <nav id="topbar">
+      <button data-action="inputs">Entradas</button>
+      <button data-action="network"><span class="connected-dot"></span> Rede</button>
+      <button data-action="reorder">⇅ Organizar</button>
+      <button data-action="settings">Configurações</button>
+    </nav>
+  </header>
+  <main id="scroller">
+    <div id="inner">
+      <section class="shelf-hero"><div class="kicker" id="shelf-meta">DOCA · 01</div><h1 id="shelf-name">Seus aplicativos</h1></section>
+      <div id="dock" class="dock"></div>
+      <section id="widgets" class="widgets">
+        <article class="widget" id="sports"><div class="widget-top"><span>$ placar</span><small>não conectado</small></div>
+          <div class="placeholder-icon">◌</div><h2>Placar</h2><p>Nenhum provedor esportivo configurado.</p><span class="widget-note">Nenhum resultado é inventado.</span></article>
+        <article class="widget" id="calendar"><div class="widget-top"><span>$ cal</span><small id="month">—</small></div>
+          <div class="calendar-week">D &nbsp;&nbsp; S &nbsp;&nbsp; T &nbsp;&nbsp; Q &nbsp;&nbsp; Q &nbsp;&nbsp; S &nbsp;&nbsp; S</div><div id="calendar-days" class="calendar-days"></div><p>Agenda externa não conectada.</p></article>
+        <article class="widget" id="tasks"><div class="widget-top"><span>$ tasks</span><small id="task-count">0/0</small></div>
+          <div id="task-list"></div><div class="add-task"><input id="new-task" placeholder="Nova tarefa..." maxlength="70"><button id="add-task">+</button></div>
+          <span class="widget-note">Armazenadas somente nesta TV.</span></article>
+      </section>
+      <section id="more" class="more">
+        <div class="section-top"><div><span class="kicker">$ apps --all</span><h2>Todos os aplicativos</h2></div><span id="app-count">—</span></div>
+        <div id="apps" class="apps"></div>
+      </section>
+      <section id="feed" class="feed">
+        <div class="section-top"><div><span class="kicker">$ integrations --status</span><h2>Integrações</h2></div><span>prévia, sem sincronização</span></div>
+        <div class="feed-panels"><div><b>GitHub</b><span>Não conectado</span></div><div><b>E-mail</b><span>Não conectado</span></div><div><b>CI / Deploys</b><span>Não conectado</span></div></div>
+      </section>
+    </div>
+  </main>
+  <div id="panel" hidden><div id="panel-title" class="kicker"></div><div id="panel-content"></div></div>
+  <div id="toast" aria-live="polite"></div>
+  <div id="saver" hidden><div class="saver-kicker">mateusarce.dev</div><div id="saver-clock">--:--</div><span class="saver-tip">Pressione qualquer tecla</span></div>
+  <div class="footer-help">◀ ▶ navegar &nbsp; · &nbsp; OK selecionar &nbsp; · &nbsp; ↓ aplicativos / widgets &nbsp; · &nbsp; voltar sair</div>
+</div>
+<script src="tv.js"></script>
+<script src="mateusarce.js"></script>
+</body>
+</html>
