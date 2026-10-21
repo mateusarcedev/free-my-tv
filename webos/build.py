@@ -23,6 +23,8 @@ import webapp  # noqa: E402
 
 OUT = os.path.join(ROOT, 'out', 'webos')
 IPK = os.path.join(ROOT, 'FreeMyTV-webos.ipk')
+MATEUSARCE_IPK = os.path.join(ROOT, 'MateusArceTV-webos.ipk')
+MATEUSARCE_ID = 'io.mateusarce.tvhome'
 
 
 def tar_gz(entries):
@@ -57,14 +59,28 @@ def ar(members):
     return out.getvalue()
 
 
-def build(preview, config):
+def build(preview, config, mateusarce=False):
     with open(os.path.join(ROOT, 'webos', 'appinfo.json'), encoding='utf-8') as f:
         info = json.load(f)
+    if mateusarce:
+        info.update({'id': MATEUSARCE_ID, 'vendor': 'mateusarce.dev',
+                     'title': 'MateusArce TV', 'iconColor': '#15F5BA'})
     app_id, version = info['id'], info['version']
     app = webapp.files(config, 'webos/build.py')
+    if mateusarce:
+        # The HTML/CSS/JS design stays independent from the Android/Tizen versions.
+        app['index.html'] = app['mateusarce.html']
+        # Optional local Geist font extraction; never commit or redistribute the font binaries.
+        for font in ('Geist.woff', 'GeistMono.woff'):
+            source = os.path.join(ROOT, 'web', font)
+            if os.path.isfile(source):
+                with open(source, 'rb') as fp:
+                    app[font] = fp.read()
     for name in ('appinfo.json', 'icon.png', 'largeIcon.png'):
         with open(os.path.join(ROOT, 'webos', name), 'rb') as f:
             app[name] = f.read()
+    if mateusarce:
+        app['appinfo.json'] = json.dumps(info, ensure_ascii=False).encode('utf-8')
 
     base = 'usr/palm/applications/' + app_id
     entries = [('usr', None), ('usr/palm', None), ('usr/palm/applications', None), (base, None)]
@@ -85,16 +101,18 @@ def build(preview, config):
                'webOS-Package-Format-Version: 2\nwebOS-Packager-Version: 1.0.0\n' % (app_id, version, size))
     data = ar([('debian-binary', b'2.0\n'), ('control.tar.gz', tar_gz([('control', control.encode('utf-8'))])),
                ('data.tar.gz', tar_gz(entries))])
-    with open(IPK, 'wb') as f:
+    target = MATEUSARCE_IPK if mateusarce else IPK
+    with open(target, 'wb') as f:
         f.write(data)
 
     if preview:
-        webapp.preview(app, OUT)
+        webapp.preview(app, os.path.join(ROOT, 'out', 'mateusarce-webos') if mateusarce else OUT)
         print('Preview: open out/webos/index.html (or serve out/webos) in a browser.')
-    print('Built %s (%s %s, %d KB)' % (os.path.basename(IPK), app_id, version, len(data) // 1024))
+    print('Built %s (%s %s, %d KB)' % (os.path.basename(target), app_id, version, len(data) // 1024))
     if not config['tmdbKey']:
         print('No TMDB key: the picks stay off (everything else works).')
 
 
 if __name__ == '__main__':
-    build('--preview' in sys.argv, webapp.config_from_args(sys.argv[1:]))
+    build('--preview' in sys.argv, webapp.config_from_args(sys.argv[1:]),
+          mateusarce='--mateusarce' in sys.argv)
