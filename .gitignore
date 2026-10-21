@@ -12,3 +12,7 @@ __pycache__/
 
 # macOS
 .DS_Store
+
+# User-owned Geist fonts extracted locally from the Claude HTML export.
+web/Geist.woff
+web/GeistMono.woff

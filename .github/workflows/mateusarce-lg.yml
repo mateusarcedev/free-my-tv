@@ -1,0 +1,60 @@
+name: MateusArce LG webOS
+
+on:
+  pull_request:
+    paths:
+      - "web/mateusarce.*"
+      - "webos/**"
+      - "tools/import_mateusarce_fonts.py"
+      - ".github/workflows/mateusarce-lg.yml"
+  push:
+    branches: [main]
+    paths:
+      - "web/mateusarce.*"
+      - "webos/**"
+      - "tools/import_mateusarce_fonts.py"
+
+jobs:
+  build-lg-webos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Check ES5 launcher source parses
+        run: node --check web/mateusarce.js
+      - name: Build LG standalone app
+        run: python3 webos/build.py --mateusarce --generic --preview
+      - name: Validate package identity and pages
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import io, tarfile, json
+          data=Path('MateusArceTV-webos.ipk').read_bytes()
+          assert data.startswith(b'!<arch>\n'), 'IPK ar header missing'
+          offset=8; members={}
+          while offset<len(data):
+              header=data[offset:offset+60]
+              name=header[:16].decode().strip().rstrip('/')
+              size=int(header[48:58].decode().strip())
+              start=offset+60
+              members[name]=data[start:start+size]
+              offset=start+size+(size%2)
+          with tarfile.open(fileobj=io.BytesIO(members['data.tar.gz']),mode='r:gz') as tar:
+              files={m.name:tar.extractfile(m).read() for m in tar if m.isfile()}
+          meta=json.loads(next(v for k,v in files.items() if k.endswith('/appinfo.json')))
+          assert meta['id']=='io.mateusarce.tvhome', meta
+          assert b'Mateus Arce' in next(v for k,v in files.items() if k.endswith('/index.html'))
+          assert any(k.endswith('/tv.js') for k in files)
+          assert any(k.endswith('/mateusarce.css') for k in files)
+          print('LG .ipk valid; app ID, page and TV bridge present')
+          PY
+      - name: Upload testable LG app
+        uses: actions/upload-artifact@v4
+        with:
+          name: MateusArceTV-webos
+          path: MateusArceTV-webos.ipk

@@ -3,6 +3,7 @@
 
     python3 webos/install.py 192.168.1.50              # install or update, then open it
     python3 webos/install.py 192.168.1.50 --uninstall  # remove it
+    python3 webos/install.py 192.168.1.50 --mateusarce # personal LG launcher
 
 Before the first install, on the TV: install "Developer Mode" from the LG Content Store, sign in with a free LG
 developer account (webostv.developer.lge.com), turn on Dev Mode Status (the TV restarts), then turn on Key Server.
@@ -28,6 +29,8 @@ IPK = os.path.join(ROOT, 'FreeMyTV-webos.ipk')
 with open(os.path.join(ROOT, 'webos', 'appinfo.json'), encoding='utf-8') as f:
     APP_ID = json.load(f)['id']
 TEMP = '/media/developer/temp/freemytv.ipk'
+MATEUSARCE_ID = 'io.mateusarce.tvhome'
+MATEUSARCE_IPK = os.path.join(ROOT, 'MateusArceTV-webos.ipk')
 SSH_OPTS = ['-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=' + os.devnull, '-o', 'LogLevel=ERROR',
             '-o', 'HostKeyAlgorithms=+ssh-rsa', '-o', 'PubkeyAcceptedKeyTypes=+ssh-rsa', '-p', '9922']
 
@@ -85,30 +88,36 @@ def main():
     if not args or not re.match(r'^\d{1,3}(\.\d{1,3}){3}$', args[0]):
         sys.exit(__doc__)
     ip = args[0]
+    use_mateusarce = '--mateusarce' in sys.argv
+    app_id = MATEUSARCE_ID if use_mateusarce else APP_ID
+    ipk = MATEUSARCE_IPK if use_mateusarce else IPK
     if not shutil.which('ssh') or not shutil.which('ssh-keygen'):
         sys.exit('OpenSSH (ssh and ssh-keygen) is needed.')
     key = fetch_key(ip)
 
     if '--uninstall' in sys.argv:
-        out = luna(ip, key, 'luna://com.webos.appInstallService/dev/remove', {'id': APP_ID}, replies=3, wait=30)
+        out = luna(ip, key, 'luna://com.webos.appInstallService/dev/remove', {'id': app_id}, replies=3, wait=30)
         print('Removed.' if '"returnValue":true' in out else 'The TV said: ' + out.strip())
         return
 
-    if not os.path.exists(IPK):
-        subprocess.run([sys.executable, os.path.join(ROOT, 'webos', 'build.py')], check=True)
+    if not os.path.exists(ipk):
+        command = [sys.executable, os.path.join(ROOT, 'webos', 'build.py')]
+        if use_mateusarce:
+            command.append('--mateusarce')
+        subprocess.run(command, check=True)
     print('Copying the app to the TV ...')
-    with open(IPK, 'rb') as f:
+    with open(ipk, 'rb') as f:
         copy = ssh(ip, key, 'mkdir -p /media/developer/temp && cat > ' + TEMP, stdin=f)
     if copy.returncode != 0:
         err = copy.stderr.decode('utf-8', 'replace') if isinstance(copy.stderr, bytes) else copy.stderr
         sys.exit('Couldn\'t copy it: %s\nIs Developer Mode still on? If the key changed, delete %s and try again.' % (err.strip(), key))
     print('Installing ...')
-    out = luna(ip, key, 'luna://com.webos.appInstallService/dev/install', {'id': APP_ID, 'ipkUrl': TEMP, 'subscribe': True},
+    out = luna(ip, key, 'luna://com.webos.appInstallService/dev/install', {'id': app_id, 'ipkUrl': TEMP, 'subscribe': True},
                replies=30, wait=60)
     if '"state":"installed"' not in out:
         sys.exit('The TV didn\'t finish installing. It said:\n' + out.strip())
     ssh(ip, key, 'rm -f ' + TEMP)
-    luna(ip, key, 'luna://com.webos.applicationManager/launch', {'id': APP_ID})
+    luna(ip, key, 'luna://com.webos.applicationManager/launch', {'id': app_id})
     print('Installed and open on the TV.')
     print('Tip: while Free My TV is open, hold a number key on the remote to open it with that key from anywhere.')
     print('Developer Mode lasts about 40 days: open the Developer Mode app now and then and press EXTEND.')
