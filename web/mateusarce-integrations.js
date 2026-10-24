@@ -32,7 +32,12 @@ function prettyDate(value,allDay){
  catch(e){return d.toLocaleString();}
 }
 function sourceState(src){
- if(!api&&!(snapshot&&snapshot[src]&&snapshot[src].status==='ok'))return 'Não conectado';
+ if(!api){
+  var publicData=snapshot&&snapshot[src];
+  if(!publicData)return 'Não conectado';
+  if(publicData.status==='error')return 'Fonte pública indisponível';
+  if(publicData.status==='unconfigured')return 'Não conectado';
+ }
  if(!snapshot)return 'Aguardando sincronização';
  var data=snapshot[src];
  if(!data)return 'Fonte indisponível';
