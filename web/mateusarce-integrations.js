@@ -32,7 +32,7 @@ function prettyDate(value,allDay){
  catch(e){return d.toLocaleString();}
 }
 function sourceState(src){
- if(!api)return 'Não conectado';
+ if(!api&&!(snapshot&&snapshot[src]&&snapshot[src].status==='ok'))return 'Não conectado';
  if(!snapshot)return 'Aguardando sincronização';
  var data=snapshot[src];
  if(!data)return 'Fonte indisponível';
@@ -169,8 +169,19 @@ function renderFeed(){
  }
 }
 function render(){renderCalendar();renderTasks();renderFeed();}
+function loadPublicGitHub(){
+ ajax('https://api.github.com/users/mateusarcedev/repos?sort=pushed&per_page=6','',function(err,data){
+  if(api)return;
+  var items=[];
+  if(!err&&data&&data.length){
+   for(var i=0;i<data.length;i++)items.push({title:data[i].name,repository:data[i].full_name||'',url:data[i].html_url||''});
+  }
+  snapshot={github:err?{status:'error',error:err}:{status:'ok',username:'mateusarcedev',notifications:null,items:items}};
+  renderFeed();
+ });
+}
 function sync(){
- if(!api){snapshot=null;render();return;}
+ if(!api){snapshot=null;render();loadPublicGitHub();return;}
  ajax(api.replace(/\/+$/,'')+'/v1/dashboard',key,function(err,data){
   if(err){snapshot={};for(var i=0;i<names.length;i++)snapshot[names[i]]={status:'error',error:err};}
   else snapshot=data||{};
