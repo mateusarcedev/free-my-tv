@@ -1,0 +1,42 @@
+name: MateusArce TV - integrations checks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/mateusarce*'
+      - 'web/mateusarce-icons/**'
+      - 'server/**'
+      - 'tools/webapp.py'
+      - 'webos/build.py'
+      - '.github/workflows/mateusarce-integrations.yml'
+  pull_request:
+    paths:
+      - 'web/mateusarce*'
+      - 'server/**'
+      - 'tools/webapp.py'
+      - 'webos/build.py'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Verify JavaScript syntax (legacy webOS-compatible)
+        run: |
+          node --check web/mateusarce.js
+          node --check web/mateusarce-integrations.js
+      - name: Verify Python source
+        run: python3 -m py_compile server/tv_gateway.py server/google_oauth_setup.py
+      - name: Verify gateway behavior without external accounts
+        run: python3 -m unittest discover -s server -p 'test_*.py' -v
+      - name: Build the MateusArceTV IPK (without credentials)
+        run: python3 webos/build.py --mateusarce --generic
+      - name: Confirm genuine package generated
+        run: test -s MateusArceTV-webos.ipk
