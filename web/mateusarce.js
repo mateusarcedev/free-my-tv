@@ -154,6 +154,8 @@ function updateFocus() {
   item=el('widgets').children[focus.index];
  } else if(zone==='panel'){
   item=panelRows[focus.index];
+ } else if(zone==='feed'){
+  item=el('feed').querySelectorAll('.feed-panels > div')[focus.index];
  }
  if(item){item.className+=' active';}
  if(zone==='dock'||zone==='apps'){
@@ -197,6 +199,8 @@ function inputPanel(){
 function settingsPanel(){
  showPanel('settings',[
   {text:'Configurações da LG',meta:'sistema',fn:function(){TV.settings(function(ok){if(!ok)toast('Configurações indisponíveis.');});}},
+  {text:'Conectar integrações',meta:'Agenda, tarefas, GitHub, e-mail e IA',fn:function(){closePanel();if(window.IntegrationHub)window.IntegrationHub.configure();}},
+  {text:'Atualizar integrações',meta:'Sincronizar agora',fn:function(){closePanel();if(window.IntegrationHub)window.IntegrationHub.refresh();}},
   {text:'Tema',meta:opts.light?'Claro':'Escuro',fn:function(){opts.light=!opts.light;store('options',opts);applyOptions();settingsPanel();}},
   {text:'Widgets',meta:opts.widgets===false?'Ocultos':'Visíveis',fn:function(){opts.widgets=opts.widgets===false;store('options',opts);applyOptions();settingsPanel();}},
   {text:'Animações',meta:opts.motion===false?'Reduzidas':'Padrão',fn:function(){opts.motion=opts.motion===false;store('options',opts);applyOptions();settingsPanel();}},
@@ -252,8 +256,16 @@ function activate() {
   return;
  }
  if(focus.zone==='widget'){
+  if(window.IntegrationHub){
+   if(focus.index===0)return window.IntegrationHub.open('sports');
+   if(focus.index===1)return window.IntegrationHub.open('calendar');
+   if(focus.index===2 && window.IntegrationHub.isConfigured())return window.IntegrationHub.open('todoist');
+  }
   if(focus.index===2){el('new-task').focus();return;}
-  toast('Integração não configurada. Este painel não exibe dados inventados.');
+  return;
+ }
+ if(focus.zone==='feed'){
+  if(window.IntegrationHub)window.IntegrationHub.open(['github','gmail','ai'][focus.index]||'github');
   return;
  }
  if(focus.zone==='panel'&&panelRows[focus.index])panelRows[focus.index].click();
@@ -287,7 +299,11 @@ function move(dir){
   if(dir==='right')focus.index=Math.min(remainder.length-1,focus.index+1);
   if(dir==='down'){if(focus.index+4<remainder.length)focus.index+=4;else {focus.zone='feed';focus.index=0;}}
   if(dir==='up'){if(focus.index>=4)focus.index-=4;else {focus.zone=opts.widgets===false?'dock':'widget';focus.index=0;}}
- } else if(focus.zone==='feed'&&dir==='up'){focus.zone=remainder.length?'apps':opts.widgets===false?'dock':'widget';focus.index=0;}
+ } else if(focus.zone==='feed'){
+  if(dir==='left')focus.index=Math.max(0,focus.index-1);
+  if(dir==='right')focus.index=Math.min(2,focus.index+1);
+  if(dir==='up'){focus.zone=remainder.length?'apps':opts.widgets===false?'dock':'widget';focus.index=0;}
+ }
  updateFocus();
 }
 function keydown(e){
