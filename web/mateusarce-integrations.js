@@ -44,7 +44,7 @@ function ajax(url,header,callback){
  var xhr=new XMLHttpRequest();
  try{
   xhr.open('GET',url,true);
-  xhr.timeout=12000;
+  xhr.timeout=30000;
   if(header)xhr.setRequestHeader('X-Dashboard-Key',header);
   xhr.onreadystatechange=function(){
    if(xhr.readyState!==4)return;
@@ -157,7 +157,7 @@ function renderFeed(){
   empty(p);
   make('b','',p,config[i][1]);
   if(state.status==='ok'){
-   if(config[i][0]==='github')subtitle=String(state.notifications||0)+' notificações · '+(state.username||'GitHub');
+   if(config[i][0]==='github')subtitle=state.notifications===null?'Repositórios públicos · '+(state.username||'GitHub'):String(state.notifications||0)+' notificações recentes · '+(state.username||'GitHub');
    if(config[i][0]==='gmail')subtitle=String(state.unread||0)+' não lidos';
    if(config[i][0]==='ai')subtitle=(state.providers||[]).length+' ferramentas monitoradas';
   }
