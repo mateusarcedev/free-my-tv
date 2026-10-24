@@ -20,10 +20,12 @@ if (!Array.isArray(tasks)) tasks = [];
 if (!opts || typeof opts !== 'object') opts = {widgets:true,light:false,motion:true};
 
 function fit() {
- var scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+ var scale = Math.min((window.innerWidth || document.documentElement.clientWidth) / 1920, (window.innerHeight || document.documentElement.clientHeight) / 1080);
  if (!scale || !isFinite(scale)) scale = 1;
  var stage = el('stage'); stage.style.webkitTransform = 'scale(' + scale + ')';
  stage.style.transform = 'scale(' + scale + ')';
+ stage.style.left = Math.max(0,((window.innerWidth || 1920)-1920*scale)/2)+'px';
+ stage.style.top = Math.max(0,((window.innerHeight || 1080)-1080*scale)/2)+'px';
 }
 function clock() {
  var d = new Date();
@@ -56,13 +58,31 @@ function sortApps(list) {
  remainder=apps.filter(function(a){return !ids[a.id];});
  renderApps();
 }
+function iconPath(app) {
+ var id=(app.id||'').toLowerCase(), title=(app.title||'').toLowerCase();
+ var match=[
+  [/netflix/,'netflix'],[/youtube/,'youtube'],[/amazon|prime.video/,'prime'],
+  [/disney/,'disney'],[/hbo|hbomax|\bmax\b/,'max'],[/globoplay/,'globoplay'],
+  [/spotify/,'spotify'],[/apple.tv|appletv/,'apple'],[/plex/,'plex'],
+  [/crunchyroll/,'crunchyroll'],[/browser|navegador/,'browser']
+ ];
+ for(var j=0;j<match.length;j++)if(match[j][0].test(id)||match[j][0].test(title))return 'mateusarce-icons/'+match[j][1]+'.svg';
+ return '';
+}
 function tile(app,i,zone,parent) {
  var b=node('div','tile',parent);
  b.setAttribute('data-zone',zone);b.setAttribute('data-index',String(i));
  var head=node('div','tile-head',b), ic=node('div','tile-icon',head);
  var label=(app.title||'?').replace(/[^A-Za-zÀ-ÿ0-9]/g,'').slice(0,2).toUpperCase()||'TV';
- if(app.icon){var img=node('img','',ic);img.src=app.icon;img.alt='';img.onerror=function(){ic.removeChild(img);ic.textContent=label;};}
- else ic.textContent=label;
+ var fallback=iconPath(app);
+ function showIcon(src,secondary){
+  if(!src){ic.textContent=label;return;}
+  clear(ic);
+  var img=node('img','',ic);img.src=src;img.alt='';
+  img.onerror=function(){if(secondary)showIcon(secondary,'');else {clear(ic);ic.textContent=label;}};
+ }
+ // Prefer packaged, predictable logos: LG internal file:// icons may be denied in sandbox.
+ showIcon(fallback || app.icon, fallback ? app.icon : '');
  var dot=node('span','tiny-dot',head);dot.style.background=app.color||'#15F5BA';
  var bottom=node('div','',b), title=node('div','tile-name',bottom);title.textContent=app.title;
  var subtitle=node('div','tile-meta',bottom);subtitle.textContent=app.id;
@@ -105,10 +125,18 @@ function applyOptions() {
  el('widgets').style.display=opts.widgets===false?'none':'';
 }
 function setScroll() {
- var where=focus.zone, y=0;
- if (where==='widget') y=-530;
- else if (where==='apps') y=-920-Math.floor(focus.index/4)*220;
- else if (where==='feed') y=-1400-Math.ceil(remainder.length/4)*210;
+ var where=focus.zone, y=0, target=null;
+ if(where==='widget')target=el('widgets');
+ else if(where==='apps')target=el('apps');
+ else if(where==='feed')target=el('feed');
+ if(target){
+  var top=target.offsetTop, p=target.offsetParent;
+  while(p&&p!==el('inner')){top+=p.offsetTop;p=p.offsetParent;}
+  y=-Math.max(0,top-370);
+ }
+ if(where==='apps')y-=Math.floor(focus.index/4)*220;
+ var minY=Math.min(0,760-el('inner').scrollHeight);
+ y=Math.max(minY,Math.min(0,y));
  el('inner').style.webkitTransform='translateY('+y+'px)';
  el('inner').style.transform='translateY('+y+'px)';
 }
