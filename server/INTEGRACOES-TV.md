@@ -115,6 +115,26 @@ Formato de exemplo (VALORES FICTÍCIOS PARA DOCUMENTAR O ESQUEMA):
 }
 ~~~
 
+Para obter contagens verdadeiras dos registros locais de Claude Code e Codex,
+execute no computador onde as CLIs armazenam suas sessões:
+
+~~~bash
+python3 server/collect_ai_usage.py --output ~/ai-usage.json
+~~~
+
+Opcionalmente informe --claude-dir, --codex-dir e
+--codex-archived-dir se os dados estiverem em outro perfil ou no WSL.
+O script soma mensagens únicas do Claude e somente o último contador
+acumulado de cada sessão Codex. Os números são **histórico local disponível**,
+não limite ou saldo da assinatura. No arquivo privado do gateway, defina
+AI_USAGE_JSON com o caminho para esse snapshot. Se gateway e CLIs estiverem
+em computadores diferentes, transfira somente o resumo JSON por meio seguro;
+não envie transcrições completas.
+
+Google Antigravity apresenta cotas pelo comando /usage no CLI, mas
+não foi implementado um leitor automático porque ainda não validamos uma
+fonte estruturada adequada. Não serão exibidos números inventados.
+
 Não use o exemplo como medição real. Um coletor precisa gerar esse
 arquivo com os dados reais de Claude Code, Codex e Antigravity.
 Tokens consumidos localmente e limites restantes da assinatura são
