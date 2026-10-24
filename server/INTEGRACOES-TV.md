@@ -89,7 +89,10 @@ editar ou concluir tarefas por enquanto.
 
 ## 4. GitHub
 
-Com GITHUB_USERNAME=mateusarcedev, mostra repositórios públicos.
+Mesmo SEM gateway, a TV tenta exibir diretamente os repositórios públicos da
+conta mateusarcedev pela API oficial do GitHub (sujeita a CORS/TLS e limites).
+Com GITHUB_USERNAME=mateusarcedev no servidor, mostra também esses dados pelo
+gateway.
 Para notificações da conta, preencha GITHUB_TOKEN com permissões mínimas
 para ler notificações. Não modifica repositórios. O contador corresponde
 ao máximo de 10 notificações buscadas, NÃO ao total histórico.
