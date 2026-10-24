@@ -33,7 +33,7 @@ jobs:
           node --check web/mateusarce.js
           node --check web/mateusarce-integrations.js
       - name: Verify Python source
-        run: python3 -m py_compile server/tv_gateway.py server/google_oauth_setup.py
+        run: python3 -m py_compile server/tv_gateway.py server/google_oauth_setup.py server/collect_ai_usage.py
       - name: Verify gateway behavior without external accounts
         run: python3 -m unittest discover -s server -p 'test_*.py' -v
       - name: Build the MateusArceTV IPK (without credentials)
