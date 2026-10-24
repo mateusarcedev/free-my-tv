@@ -6,6 +6,7 @@ proxy with authentication at this API. Provider credentials NEVER go in the
 LG IPK. Run with environment variables (see gateway.example.env).
 """
 import datetime as dt
+from concurrent.futures import ThreadPoolExecutor
 import hmac
 import json
 import os
@@ -23,6 +24,7 @@ PORT = int(os.environ.get("GATEWAY_PORT", "18777"))
 CACHE_SECONDS = 120
 _CACHE = {"value": None, "time": 0.0}
 _MUTEX = threading.RLock()
+_TOKEN_MUTEX = threading.Lock()
 _GOOGLE = {"token": "", "expires": 0.0}
 _USER_AGENT = "MateusArceTV-Gateway/1.0 (personal read-only dashboard)"
 
@@ -51,20 +53,20 @@ def google_access_token():
     refresh = os.environ.get("GOOGLE_REFRESH_TOKEN", "")
     if not cid or not secret or not refresh:
         raise RuntimeError("Credenciais do Google incompletas")
-    now = time.time()
-    if _GOOGLE["token"] and now < _GOOGLE["expires"]:
+    with _TOKEN_MUTEX:
+        now = time.time()
+        if _GOOGLE["token"] and now < _GOOGLE["expires"]:
+            return _GOOGLE["token"]
+        result = fetch_json(
+            "https://oauth2.googleapis.com/token", method="POST",
+            data={"client_id": cid, "client_secret": secret,
+                  "refresh_token": refresh, "grant_type": "refresh_token"},
+        )
+        if not result.get("access_token"):
+            raise RuntimeError("Não foi possível renovar o acesso Google")
+        _GOOGLE.update(token=result["access_token"],
+                       expires=now + max(60, int(result.get("expires_in", 3600)) - 90))
         return _GOOGLE["token"]
-    result = fetch_json(
-        "https://oauth2.googleapis.com/token",
-        method="POST",
-        data={"client_id": cid, "client_secret": secret,
-              "refresh_token": refresh, "grant_type": "refresh_token"},
-    )
-    if not result.get("access_token"):
-        raise RuntimeError("Não foi possível renovar o acesso Google")
-    _GOOGLE.update(token=result["access_token"],
-                   expires=now + max(60, int(result.get("expires_in", 3600)) - 90))
-    return _GOOGLE["token"]
 
 
 def google_configured():
@@ -165,11 +167,10 @@ def gmail_data():
         "https://gmail.googleapis.com/gmail/v1/users/me/messages?labelIds=INBOX&maxResults=6",
         token,
     )
-    items = []
-    for summary in listing.get("messages", [])[:6]:
+    def read_message(summary):
         mid = quote(summary.get("id", ""), safe="")
         if not mid:
-            continue
+            return None
         detail = fetch_json(
             "https://gmail.googleapis.com/gmail/v1/users/me/messages/" + mid +
             "?format=metadata&metadataHeaders=Subject&metadataHeaders=From", token
@@ -177,10 +178,10 @@ def gmail_data():
         headers = {}
         for header in detail.get("payload", {}).get("headers", []):
             headers[header.get("name", "").lower()] = header.get("value", "")
-        items.append({
-            "subject": str(headers.get("subject") or "(Sem assunto)")[:160],
-            "from": str(headers.get("from") or "")[:120],
-        })
+        return {"subject": str(headers.get("subject") or "(Sem assunto)")[:160],
+                "from": str(headers.get("from") or "")[:120]}
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        items = list(filter(None, pool.map(read_message, listing.get("messages", [])[:6])))
     return {"status": "ok", "unread": info.get("messagesUnread", 0), "items": items}
 
 
@@ -226,14 +227,13 @@ def dashboard():
         now = time.monotonic()
         if _CACHE["value"] is not None and now - _CACHE["time"] < CACHE_SECONDS:
             return _CACHE["value"]
-        out = {
-            "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
-            "calendar": safe_source(calendar_data),
-            "todoist": safe_source(todoist_data),
-            "github": safe_source(github_data),
-            "gmail": safe_source(gmail_data),
-            "ai": safe_source(ai_data),
-        }
+        out = {"generated_at": dt.datetime.now(dt.timezone.utc).isoformat()}
+        sources = {"calendar": calendar_data, "todoist": todoist_data,
+                   "github": github_data, "gmail": gmail_data, "ai": ai_data}
+        with ThreadPoolExecutor(max_workers=5) as pool:
+            futures = {name: pool.submit(safe_source, handler) for name, handler in sources.items()}
+            for name, future in futures.items():
+                out[name] = future.result()
         _CACHE.update(value=out, time=now)
         return out
 
