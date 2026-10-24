@@ -135,7 +135,7 @@ function setScroll() {
   y=-Math.max(0,top-370);
  }
  if(where==='apps')y-=Math.floor(focus.index/4)*220;
- var minY=Math.min(0,760-el('inner').scrollHeight);
+ var minY=Math.min(0,760-el('inner').offsetHeight);
  y=Math.max(minY,Math.min(0,y));
  el('inner').style.webkitTransform='translateY('+y+'px)';
  el('inner').style.transform='translateY('+y+'px)';
