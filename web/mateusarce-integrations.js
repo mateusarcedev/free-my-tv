@@ -23,8 +23,9 @@ function make(tag,cls,parent,content){
 function setStatus(id,status){
  var el=$(id);if(el)el.textContent=status;
 }
-function prettyDate(value){
+function prettyDate(value,allDay){
  if(!value)return 'Sem data';
+ if(allDay && /^\d{4}-\d{2}-\d{2}$/.test(value))return value.slice(8,10)+'/'+value.slice(5,7)+' · dia inteiro';
  var d=new Date(value);
  if(isNaN(d.getTime()))return String(value).slice(0,24);
  try{return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}
@@ -127,7 +128,7 @@ function renderCalendar(){
  old.textContent=sourceState('calendar');
  var box=$('hub-calendar-items');
  if(!box){box=make('div','hub-preview',area);box.id='hub-calendar-items';}
- showEntries(box,items,function(x){return [x.title,prettyDate(x.start)];},3);
+ showEntries(box,items,function(x){return [x.title,prettyDate(x.start,x.all_day)];},3);
 }
 function renderTasks(){
  var section=$('tasks'),holder=$('task-list');
@@ -198,7 +199,7 @@ function open(id){
  } else {
   var data=get(id),items=data.items||[],providers=data.providers||[];
   line(body,sourceState(id),data.error||'Última atualização: '+(lastUpdate||'—'));
-  if(id==='calendar')for(var j=0;j<items.length;j++)line(body,items[j].title,prettyDate(items[j].start));
+  if(id==='calendar')for(var j=0;j<items.length;j++)line(body,items[j].title,prettyDate(items[j].start,items[j].all_day));
   if(id==='todoist')for(var k=0;k<items.length;k++)line(body,items[k].title,items[k].due||'Sem prazo');
   if(id==='github')for(var g=0;g<items.length;g++)line(body,items[g].title,items[g].repository||'');
   if(id==='gmail')for(var m=0;m<items.length;m++)line(body,items[m].subject,items[m].from||'');
