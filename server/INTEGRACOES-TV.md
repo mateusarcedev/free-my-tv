@@ -72,7 +72,7 @@ python3 server/google_oauth_setup.py
 ~~~
 
 O script abre uma autorização em localhost e solicita somente Calendar Events
-read-only e Gmail read-only. Guarde GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+read-only e Gmail metadata (cabeçalhos e rótulos, sem corpo da mensagem). Guarde GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
 e GOOGLE_REFRESH_TOKEN na configuração privada do gateway.
 
 O calendário consulta os próximos 14 dias (até 12 eventos).
