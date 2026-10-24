@@ -275,7 +275,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    if len(KEY) < 24 or KEY.lower() in ("changeme", "senha"):
+    if len(KEY) < 24 or any(marker in KEY.upper() for marker in ("SUBSTITUA", "EXEMPLO", "CHANGEME")):
         raise SystemExit("Configure GATEWAY_KEY forte (pelo menos 24 caracteres).")
     if BIND not in ("127.0.0.1", "::1", "localhost"):
         print("WARNING: exposed bind address; use HTTPS and firewall.", flush=True)
