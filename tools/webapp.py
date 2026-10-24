@@ -71,7 +71,10 @@ def files(config, made_by):
     out = {}
     web = os.path.join(ROOT, 'web')
     for name in sorted(os.listdir(web)):
-        with open(os.path.join(web, name), 'rb') as f:
+        source = os.path.join(web, name)
+        if not os.path.isfile(source):
+            continue
+        with open(source, 'rb') as f:
             out[name] = f.read()
     icons = os.path.join(web, 'mateusarce-icons')
     if os.path.isdir(icons):
