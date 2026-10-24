@@ -1,0 +1,31 @@
+
+/* Readable, remote-friendly overlays and live feed cards for webOS 3+. */
+#hub-overlay[hidden]{display:none!important}
+#hub-overlay{position:fixed;left:0;top:0;right:0;bottom:0;z-index:100;background:rgba(0,0,0,.91);display:-webkit-flex;display:flex;align-items:center;justify-content:center;padding:28px;font-family:Arial,sans-serif;color:#f1f4f2}
+.hub-dialog{width:86%;max-width:1000px;max-height:88%;overflow-y:auto;padding:30px 40px;border:2px solid #336458;border-radius:16px;background:#111c19;box-shadow:0 18px 70px rgba(0,0,0,.8)}
+.hub-dialog h2{font-size:34px;font-weight:600;color:#7ef2ca;margin:0 0 20px}
+.hub-dialog-top{display:-webkit-flex;display:flex;justify-content:space-between;align-items:center}
+.hub-dialog-top h2{margin:0 0 12px}
+.hub-dialog button{cursor:pointer;font-size:20px;border-radius:9px;padding:15px 18px;min-height:58px}
+.hub-close,.hub-secondary{border:1px solid #576b65;background:#26332e;color:#f1f4f2}
+.hub-action{border:1px solid #15f5ba;background:#174e3e;color:#caffef}
+.hub-dialog button:focus,.hub-dialog input:focus{outline:3px solid #15f5ba}
+.hub-dialog-body{max-height:65vh;overflow-y:auto}
+.hub-detail-row{padding:16px 4px;border-bottom:1px solid #314039}
+.hub-detail-row strong,.hub-entry strong{display:block;font-size:21px;font-weight:500;color:#f4f4f4}
+.hub-detail-row small,.hub-entry small{display:block;font-size:16px;color:#b4c2ba;margin-top:7px;line-height:1.3}
+.hub-muted{font-size:19px!important;color:#a9b9b1!important;line-height:1.5!important}
+.hub-preview{margin-top:12px;max-height:160px;overflow:hidden}
+.hub-entry{padding:8px 0;border-bottom:1px solid #333d39}
+.hub-preview .hub-entry strong,#task-list .hub-entry strong{font-size:16px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hub-preview .hub-entry small,#task-list .hub-entry small{font-size:13px;line-height:1.1;margin-top:4px;color:#aaa}
+.hub-preview .hub-muted,#task-list .hub-muted{font-size:15px!important}
+.hub-field{display:block;margin:20px 0;color:#a8bfb4}
+.hub-field span{display:block;font-size:18px;margin-bottom:8px}
+.hub-field input{display:block;width:100%;font-size:22px;padding:16px;border:1px solid #54776b;border-radius:8px;color:white;background:#0b1311}
+.hub-error{font-size:16px;color:#ffbfaa}
+.hub-actions{display:-webkit-flex;display:flex;flex-wrap:wrap}
+.hub-actions button{margin-right:12px;margin-bottom:10px}
+.feed-panels>div{cursor:pointer;min-width:0}
+.feed-panels>div.active,.feed-panels>div:hover{border-color:#15f5ba;box-shadow:inset 0 0 0 2px rgba(21,245,186,.16)}
+.feed-panels>div span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
