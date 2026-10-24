@@ -16,3 +16,8 @@ __pycache__/
 # User-owned Geist fonts extracted locally from the Claude HTML export.
 web/Geist.woff
 web/GeistMono.woff
+
+# Private read-only TV dashboard credentials and snapshots
+server/gateway.env
+server/*.local.env
+server/ai-usage.json
