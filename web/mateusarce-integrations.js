@@ -42,7 +42,8 @@ function sourceState(src){
 }
 function get(src){return snapshot&&snapshot[src]||{};}
 function ajax(url,header,callback){
- var xhr=new XMLHttpRequest();
+ var xhr=new XMLHttpRequest(),completed=false;
+ function finish(error,payload){if(completed)return;completed=true;callback(error,payload);}
  try{
   xhr.open('GET',url,true);
   xhr.timeout=30000;
@@ -50,14 +51,14 @@ function ajax(url,header,callback){
   xhr.onreadystatechange=function(){
    if(xhr.readyState!==4)return;
    if(xhr.status>=200&&xhr.status<300){
-    try{callback(null,JSON.parse(xhr.responseText));}
-    catch(e){callback('Resposta inválida',null);}
-   } else callback(xhr.status===401?'Código de acesso incorreto':'HTTP '+xhr.status,null);
+    try{finish(null,JSON.parse(xhr.responseText));}
+    catch(e){finish('Resposta inválida',null);}
+   } else finish(xhr.status===401?'Código de acesso incorreto':'HTTP '+xhr.status,null);
   };
-  xhr.onerror=function(){callback('Sem conexão / CORS / certificado TLS',null);};
-  xhr.ontimeout=function(){callback('Tempo de conexão esgotado',null);};
+  xhr.onerror=function(){finish('Sem conexão / CORS / certificado TLS',null);};
+  xhr.ontimeout=function(){finish('Tempo de conexão esgotado',null);};
   xhr.send();
- }catch(e){callback('Conexão bloqueada: '+e.message,null);}
+ }catch(e){finish('Conexão bloqueada: '+e.message,null);}
 }
 function readScores(){
  scores=[];scoreErrors=[];
